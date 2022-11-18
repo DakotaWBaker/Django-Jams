@@ -5,58 +5,47 @@ from rest_framework.viewsets import ModelViewSet
 from .models import *
 from .serializers import *
 from rest_framework.response import Response
+
 # Create your views here.
 
-class SongAPIView(APIView):
-    #Read ops
-    def get_object(self, pk):
-        try: 
-            return Song.objects.get(pk=pk)
-        except Song.DoesNotExist:
-            raise Http404
 
-    def get(self, request, pk=None, format=None):
-        if pk:
-            data = self.get_object(pk)
-            serializer = SongSerializer(data)
-        else:
-            data = Song.objects.all()           #Can use order by or filter here
-            serializer = SongSerializer(data, many=True)
+class SongViewSet(ModelViewSet):
+    search_fields = ['name']
+    filter_backends = (filters.SearchFilter,)
+    queryset = Song.objects.all()
+    serializer_class = SongSerializer
 
-        return Response(serializer.data)
 
-    #Create ops
-    def post(self, request, format=None):
-        print('You sent a post request')
-        data = request.data
-        serializer = SongSerializer(data=data)
-
-        #Check if data is valid
-        serializer.is_valid(raise_exception=True)
-
-        #Save songs sent over
-        serializer.save()
-
-        #Inform front-end of result
-        response = Response()
-
-        response.data = {
-            'message': "Song created",
-            'data': serializer.data
-        }
-
-        return response
-
-        #def put
-        #def delete
 class GenreViewSet(ModelViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    http_method_names = ['get', 'post']
+
 
 class ArtistViewSet(ModelViewSet):
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
-    http_method_names = ['get', 'post']
 
 
+class AlbumViewSet(ModelViewSet):
+    queryset = Album.objects.all()
+    serializer_class = AlbumSerializer
+
+class PlaylistViewSet(ModelViewSet):
+    queryset = Playlist.objects.all()
+    serializer_class = PlaylistSerializer
+
+class SongArtistViewSet(ModelViewSet):
+    queryset = Song.objects.all()
+    serializer_class = SongSerializer
+
+    def get_queryset(self):
+        if self.request.artist.name:
+            queryset = Song.objects.filter(artist=self.request.artist.name)
+            return queryset.order_by('artist')
+        else:
+            return queryset
+   
+    # def get_queryset(self):
+    #     artist_name = self.request.query_params.get('name')
+    #     return Song.objects.filter(artist__name = name)
+       

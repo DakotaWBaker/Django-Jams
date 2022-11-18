@@ -21,7 +21,7 @@ class Genre(models.Model):
 class Album(models.Model):
     name = models.CharField(default = 'Untitled', max_length=255)
     release = models.IntegerField(null = False, max_length=4)
-    song_name = models.ManyToManyField('Song')
+    song_name = models.ManyToManyField('Song', related_name= 'album_name')
     genre = models.ForeignKey('Genre', on_delete=models.CASCADE, null = True, blank = True)
 
 class Playlist(models.Model):
